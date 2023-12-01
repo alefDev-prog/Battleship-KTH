@@ -1,4 +1,5 @@
 import tkinter as tk
+from Game import Game
 
 #This is the class for the GUI
 class Board:
@@ -7,26 +8,50 @@ class Board:
         self.strArr = arr
         self.btnArr = [['']*size for _ in range(size)]
         self.size = size
+
         self.root = tk.Tk()
         self.root.title('Battleship')
-        self.cheatBtn = tk.Button(self.root,text="Cheat", command=self.cheat)
+
+        self.button_frame = tk.Frame(self.root)
+        self.other_frame = tk.Frame(self.root)
+
+        self.other_frame.pack(side=tk.TOP)
+        self.button_frame.pack()
+
+        self.endBTN = tk.Button(self.other_frame, text="End", command=self.end)
+        self.endBTN.grid(row=0, column=1)
+
+        self.cheatBtn = tk.Button(self.other_frame, text="Cheat", command=self.cheat)
         self.cheatBtn.grid(row=0, column=0)
         self.cheating = False
 
-        #Initializes the button matrix
+        self.score = 0.0
+        self.strScore = tk.StringVar()
+        self.strScore.set("")
+        self.scoreLabel = tk.Label(self.other_frame, text="Hit-percentage:")
+        self.scoreLabel.grid(row=1, column=0)
+        self.scoreResult = tk.Label(self.other_frame, textvariable=self.strScore)
+        self.scoreResult.grid(row=1, column=1)
+
+        self.initButtons(self.size)
+
+        self.game = Game()
+                
+        self.root.mainloop()
+    
+
+    def initButtons(self, size):
         for i in range(size):
             self.btnArr[i] = []
             for j in range(size):
-                button = None
-                if i == 0 or j == 0:
-                    button = tk.Button(self.root, height=2, width=4, text=self.strArr[i][j])
-                else:
-                    button = tk.Button(self.root, height=2, width=4, text="")
-                
-                button.grid(row=i+1, column=j)
+                button = tk.Button(self.button_frame, height=2, width=4)
+                button.grid(row=i, column=j)
                 self.btnArr[i].append(button)
-        
-        self.root.mainloop()
+                
+                if i == 0 or j == 0:
+                    button.config(text=self.strArr[i][j])
+                else:
+                    button.config(command=lambda button=button: self.shoot(button))
 
     #switches between cheating and not cheating
     def cheat(event):
@@ -34,7 +59,9 @@ class Board:
 
             for i in range (event.size):
                 for j in range(event.size):
-                    if event.strArr[i][j] == "X":
+                    if event.strArr[i][j] == "#":
+                        continue
+                    elif event.strArr[i][j] == "X":
                         event.btnArr[i][j].config(text="X")
             
           
@@ -42,9 +69,48 @@ class Board:
             
             for i in range (event.size):
                 for j in range(event.size):
-                    if event.strArr[i][j] == "X":
+                    if event.strArr[i][j] == "#":
+                        continue
+                    elif event.strArr[i][j] == "X":
                         event.btnArr[i][j].config(text="")
         event.cheating = not event.cheating
+
+    #Ends the program
+    def end(event):
+        event.root.destroy()
+    
+
+    #user shoots on a box
+    def shoot(event, button):
+
+
+        gridInfo = button.grid_info()
+        row = gridInfo["row"]
+        col = gridInfo["column"]
+       
+        
+
+        if(event.strArr[row][col] == "X"):
+            event.game.hit()
+            button.config(text="#")
+            event.strArr[row][col] = "#"
+        elif event.strArr[row][col] == "#":
+            pass
+        else:
+            event.game.miss()
+            button.config(text = "O")
+        
+        shots = event.game.shots
+        hits = event.game.hits
+
+        newScore = round(hits/shots,3)
+        event.score = newScore
+        
+        event.strScore.set((str(newScore*100))+"%")
+        
+
+        
+        
                
 
         
