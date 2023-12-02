@@ -4,10 +4,11 @@ from Game import Game
 #This is the class for the GUI
 class Board:
 
-    def __init__(self, size, arr):
+    def __init__(self, size, arr, shipList):
         self.strArr = arr
-        self.btnArr = [['']*size for _ in range(size)]
+        self.btnArr = [['']*size for i in range(size)]
         self.size = size
+        self.shipList = shipList
 
         self.root = tk.Tk()
         self.root.title('Battleship')
@@ -75,9 +76,6 @@ class Board:
                         event.btnArr[i][j].config(text="")
         event.cheating = not event.cheating
 
-    #Ends the program
-    def end(event):
-        event.root.destroy()
     
 
     #user shoots on a box
@@ -94,6 +92,8 @@ class Board:
             event.game.hit()
             button.config(text="#")
             event.strArr[row][col] = "#"
+
+            event.updateShips(row, col)
         elif event.strArr[row][col] == "#":
             pass
         else:
@@ -103,17 +103,68 @@ class Board:
         shots = event.game.shots
         hits = event.game.hits
 
+
         newScore = round(hits/shots,3)
         event.score = newScore
         
-        event.strScore.set((str(newScore*100))+"%")
-        
+        event.strScore.set((str(round(newScore*100)))+"%")
 
+        #Checks win
+        if(hits == 9):
+            print("You have won!!!")        
+
+
+
+    #updates the status of the ships in shipList
+    def updateShips(self, row, col):
+        for ship in self.shipList:
+            if ship.sunken:
+                print("going over")
+                continue
+            
+            hitCounter = 0    
+            if ship.vertical:
+                for y in range(ship.startY, ship.startY + ship.length):
+                    if self.strArr[ship.startX][y] == "#":
+                        print("#")
+                        hitCounter +=1
+            else:
+                for x in range(ship.startX, ship.startX + ship.length):
+                    if self.strArr[x][ship.startY] == "#":
+                        print("#")
+                        hitCounter +=1
+            
+            #checks if newly sunken ship
+            if hitCounter == ship.length:
+                ship.sunken = True
+                print("Sunken")
+                self.newlySunken(ship)
         
         
                
+    def newlySunken(self, ship):
+        startX = ship.startX
+        startY = ship.startY
+        vertical = ship.vertical
+        length = ship.length
+
+        for dy in [-1,0,1]:
+            for dx in [-1,0,1]:
+                if vertical:
+                    for y in range(startY + dy, startY+length+dy):
+                        if 0 <= startX + dx < self.size and 0 <= y < self.size and self.strArr[startX+dx][y] != "#":
+                            self.strArr[startX + dx][y] = "O"
+                            self.btnArr[startX + dx][y].config(text = "O")
+                else: 
+                    for x in range(startX + dx, startX+length+dx):
+                        if 0 <= startY + dy < self.size and 0 <= x < self.size and self.strArr[x][startY+dy] != "#":
+                            self.strArr[x][startY + dy] = "O"
+                            self.btnArr[x][startY + dy].config(text = "O")
+
 
         
-
+#Ends the program
+    def end(event):
+        event.root.destroy()
 
 
