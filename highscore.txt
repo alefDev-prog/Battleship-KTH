@@ -1,0 +1,4 @@
+allan,100.0
+ballan,90.0
+callan,60.0
+dallan,27.3

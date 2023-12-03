@@ -15,6 +15,9 @@ def initGame():
 	Y_COORDINATES = ["A","B", "C", "D", "E", "F", "G", "H"]
 	shipList = []
 	boardArr = [['']*BOARD_SIZE for _ in range(BOARD_SIZE)]
+
+	highScoreList = readHighScore()
+
 	for y in range(0, BOARD_SIZE):
 		for x in range(0, BOARD_SIZE):
 			if(y == 0 and x != 0):
@@ -25,7 +28,7 @@ def initGame():
 
 	for i in range(2,5):
 		randomizePositions(boardArr, i, shipList)
-	myGUI = Board(BOARD_SIZE, boardArr, shipList)
+	myGUI = Board(BOARD_SIZE, boardArr, shipList, highScoreList)
 
                            
     
@@ -76,7 +79,23 @@ def randomizePositions(arr, length, shipList):
 			arr[x][startY] = "X"
 		
 
+#Reads the highScoreList and sorts it
+def readHighScore():
+	f = open("highscore.txt", "r")
+	strList = f.readlines()
+	f.close()
 
+	processedList = []
+
+	for player in strList:
+		player = player.strip()  # remove the newline character
+		entry = player.split(",")
+		processedList.append(entry)
+	
+	return processedList
+
+
+	
 
 
 def main():

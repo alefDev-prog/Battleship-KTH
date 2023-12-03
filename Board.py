@@ -4,11 +4,15 @@ from Game import Game
 #This is the class for the GUI
 class Board:
 
-    def __init__(self, size, arr, shipList):
+    def __init__(self, size, arr, shipList, highScoreList):
+        
+        self.gameOver = False
+
         self.strArr = arr
         self.btnArr = [['']*size for i in range(size)]
         self.size = size
         self.shipList = shipList
+        self.highScoreList = highScoreList
 
         self.root = tk.Tk()
         self.root.title('Battleship')
@@ -19,7 +23,7 @@ class Board:
         self.other_frame.pack(side=tk.TOP)
         self.button_frame.pack()
 
-        self.endBTN = tk.Button(self.other_frame, text="End", command=self.giveUp)
+        self.endBTN = tk.Button(self.other_frame, text="End", command=self.end)
         self.endBTN.grid(row=0, column=1)
 
         self.cheatBtn = tk.Button(self.other_frame, text="Cheat", command=self.cheat)
@@ -80,25 +84,26 @@ class Board:
 
     #user shoots on a box
     def shoot(event, button):
-
+        
+        if(event.gameOver):
+            return
 
         gridInfo = button.grid_info()
         row = gridInfo["row"]
         col = gridInfo["column"]
        
-        
-
         if(event.strArr[row][col] == "X"):
             event.game.hit()
             button.config(text="#")
             event.strArr[row][col] = "#"
 
             event.updateShips(row, col)
-        elif event.strArr[row][col] == "#":
-            pass
+        elif event.strArr[row][col] == "#" or event.strArr[row][col] == "O":
+            return
         else:
             event.game.miss()
             button.config(text = "O")
+            event.strArr[row][col] = "O"
         
         shots = event.game.shots
         hits = event.game.hits
@@ -111,7 +116,9 @@ class Board:
 
         #Checks win
         if(hits == 9):
-            print("You have won!!!")        
+            print("You have won!!!")
+            event.gameOver = True
+            event.victory()
 
 
 
@@ -153,12 +160,12 @@ class Board:
             for dx in [-1,0,1]:
                 if vertical:
                     for y in range(startY + dy, startY+length+dy):
-                        if 0 <= startX + dx < self.size and 0 <= y < self.size and self.strArr[startX+dx][y] != "#":
+                        if 1 <= startX + dx < self.size and 1 <= y < self.size and self.strArr[startX+dx][y] != "#":
                             self.strArr[startX + dx][y] = "O"
                             self.btnArr[startX + dx][y].config(text = "O")
                 else: 
                     for x in range(startX + dx, startX+length+dx):
-                        if 0 <= startY + dy < self.size and 0 <= x < self.size and self.strArr[x][startY+dy] != "#":
+                        if 1 <= startY + dy < self.size and 1 <= x < self.size and self.strArr[x][startY+dy] != "#":
                             self.strArr[x][startY + dy] = "O"
                             self.btnArr[x][startY + dy].config(text = "O")
 
@@ -168,19 +175,70 @@ class Board:
     def showAlert(self, message):
         self.alertLabel = tk.Label(self.root, text=message)
         self.alertLabel.pack()
-        self.root.after(2000, self.clearAlert)  # 2000 ms = 2 seconds
+        self.root.after(2000, self.clearAlert) 
 
     #Clears the pop-up message by removing the Tkinter widget
     def clearAlert(self):
         self.alertLabel.pack_forget()
+
+    
+    #sets the name of the gamer
+    def setName(self, name):
+        if(name == ""):
+            return 
+        
+        score = str(self.score*100)
+        self.highScoreList.append([name, score])
+        sortedHighScoreList = sorted(self.highScoreList, key=lambda x: float(x[1]),reverse=True)
+
+
+        with open("highscore.txt", "w") as f:
+            for sub_list in sortedHighScoreList:
+                f.write(",".join(map(str, sub_list))+"\n")
+
+        self.end()
+
+
+    def checkTenBest(self):
+        counter = 0
+        print(self.highScoreList)
+        for player in self.highScoreList:
+            print(player)
+            if self.score*100 < float(player[1]):
+                counter +=1
+        if counter < 10:
+            return True
+        else:
+            return False
+        
+
         
     #Ends the program by the click of a button
-    def giveUp(event):
+    def end(event):
         event.root.destroy()
 
     
     #Controls the end of the game, when a user has sunken all ships
-    def victory(event):
-        pass
+    def victory(self):
+        
+        openForm = self.checkTenBest()
+
+        if openForm:
+
+            congratsLabel = tk.Label(self.root, text="You were among the top 10")
+            congratsLabel.pack()
+            formLabel = tk.Label(self.root, text="Enter your name:")
+            formLabel.pack()
+
+            self.nameEntry = tk.Entry(self.root)
+            self.nameEntry.pack()
+
+            submit_button = tk.Button(self.root, text="Submit", command=lambda: self.setName(self.nameEntry.get()))        
+            submit_button.pack()
+        else:
+            congratsLabel = tk.Label(self.root, text="You won, but are not among top 10")
+            congratsLabel.pack()
+
+    
 
 
