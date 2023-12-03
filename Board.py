@@ -19,7 +19,7 @@ class Board:
         self.other_frame.pack(side=tk.TOP)
         self.button_frame.pack()
 
-        self.endBTN = tk.Button(self.other_frame, text="End", command=self.end)
+        self.endBTN = tk.Button(self.other_frame, text="End", command=self.giveUp)
         self.endBTN.grid(row=0, column=1)
 
         self.cheatBtn = tk.Button(self.other_frame, text="Cheat", command=self.cheat)
@@ -138,6 +138,7 @@ class Board:
             if hitCounter == ship.length:
                 ship.sunken = True
                 print("Sunken")
+                self.showAlert("You have sunken a ship!")
                 self.newlySunken(ship)
         
         
@@ -162,9 +163,24 @@ class Board:
                             self.btnArr[x][startY + dy].config(text = "O")
 
 
+    
+    #Shows a pop-up message at the bottom of the window, for 2 sec
+    def showAlert(self, message):
+        self.alertLabel = tk.Label(self.root, text=message)
+        self.alertLabel.pack()
+        self.root.after(2000, self.clearAlert)  # 2000 ms = 2 seconds
+
+    #Clears the pop-up message by removing the Tkinter widget
+    def clearAlert(self):
+        self.alertLabel.pack_forget()
         
-#Ends the program
-    def end(event):
+    #Ends the program by the click of a button
+    def giveUp(event):
         event.root.destroy()
+
+    
+    #Controls the end of the game, when a user has sunken all ships
+    def victory(event):
+        pass
 
 
